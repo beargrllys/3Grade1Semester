@@ -38,17 +38,12 @@ int std_input(char *inputBuf[]) //Shell input function
 int clear_args(char *inputBuf[])
 {
     int i = 0;
-    while ((*(inputBuf + i) != NULL) && (i < (MAX_LINE / 2 + 1)))
+    while ((i < (MAX_LINE / 2 + 1)))
     {
-        free(inputBuf[i]);
+        //free(inputBuf[i]);
         inputBuf[i] = NULL;
         i++;
     }
-<<<<<<< HEAD
-=======
-    memset(inputBuf, '\0', (MAX_LINE / 2 + 1) * sizeof(char));
-    return 0;
->>>>>>> 3852fc842776a6e548525f8b024e11b4e1c77900
 }
 
 int print_input(char *inputBuf[], int *size)
@@ -58,7 +53,6 @@ int print_input(char *inputBuf[], int *size)
     {
         printf("%s\n", *(inputBuf + count));
     }
-    return 0;
 }
 
 void fileRedirection(char *inputBuf[], int *token, int *LtoR, int *argc)
@@ -77,7 +71,6 @@ void fileRedirection(char *inputBuf[], int *token, int *LtoR, int *argc)
     {
         *(paramList + idx - 1) = *(inputBuf + idx);
     }
-<<<<<<< HEAD
     for (int tmp = 0; tmp < idx + 1; tmp++)
     {
         paramList[tmp] = (char *)malloc(sizeof(char) * MAX_LINE);
@@ -93,25 +86,6 @@ void fileRedirection(char *inputBuf[], int *token, int *LtoR, int *argc)
         else
         {
             strcpy(paramList[tmp], inputBuf[tmp]);
-=======
-    if (*LtoR == 1)
-    { //Left to Right
-        for (int tmp = 0; tmp < idx + 2; tmp++)
-        {
-            paramList[tmp] = (char *)malloc(sizeof(char) * MAX_LINE);
-            if (tmp == idx)
-            {
-                *(paramList + tmp) = ".";
-            }
-            else if (tmp == idx + 1)
-            {
-                *(paramList + tmp) = NULL;
-            }
-            else
-            {
-                strcpy(paramList[tmp], inputBuf[tmp]);
-            }
->>>>>>> 3852fc842776a6e548525f8b024e11b4e1c77900
         }
     }
     if (dup2(fd, STDOUT_FILENO) == -1)
@@ -127,7 +101,7 @@ void fileRedirection(char *inputBuf[], int *token, int *LtoR, int *argc)
     }
     close(fd);
     ret = dup2(STDOUT_FILENO, fd);
-    clear_args(paramList);
+    //clear_args(paramList);
 }
 
 void orderRedirection(char *inputBuf[], int *token, int *argc)
@@ -149,7 +123,6 @@ void orderRedirection(char *inputBuf[], int *token, int *argc)
             buf[rd_size] = 0;
         }
     }
-<<<<<<< HEAD
     else
     {
         perror("file open error");
@@ -175,10 +148,6 @@ void orderRedirection(char *inputBuf[], int *token, int *argc)
         }
     }
     if (execvp(inputBuf[0], paramList) == -1)
-=======
-    printf("%s   %s\n", *paramList, *(paramList + 1));
-    if (dup2(fd, STDOUT_FILENO) == -1)
->>>>>>> 3852fc842776a6e548525f8b024e11b4e1c77900
     {
         perror("failed exec");
         exit(1);
@@ -188,6 +157,7 @@ void orderRedirection(char *inputBuf[], int *token, int *argc)
 int seperateOrder(char *inputBuf[], char *front_order[], char *back_order[], int *tocken, int *argc)
 {
     int i = 0;
+    int j = 0;
     for (i = 0; i < *tocken; i++)
     {
         front_order[i] = (char *)malloc(sizeof(char) * MAX_LINE);
@@ -195,11 +165,13 @@ int seperateOrder(char *inputBuf[], char *front_order[], char *back_order[], int
         strcpy(front_order[i], inputBuf[i]);
     }
     front_order[*tocken] = NULL;
-    for (i = *tocken + 1; i < *argc; i++)
+    for (i = *tocken + 1; i <= *argc; i++)
     {
-        back_order[i] = (char *)malloc(sizeof(char) * MAX_LINE);
-        memset(back_order[i], '\0', MAX_LINE);
-        strcpy(back_order[i], inputBuf[i]);
+        back_order[j] = (char *)malloc(sizeof(char) * MAX_LINE);
+        memset(back_order[j], '\0', MAX_LINE);
+        strcpy(back_order[j], inputBuf[i]);
+        //printf("%s  ==   %d   \n", back_order[j],  *tocken+1 + i);
+        j++;
     }
     return *argc - *tocken + 1;
 }
@@ -225,6 +197,8 @@ int pipeline(char *inputBuf[], int *token, int *argc)
         return -1;
     }
 
+    //READ_END 0
+    //WRITE_END 1
     pid = fork();
     if (pid < 0)
     {
@@ -247,30 +221,39 @@ int pipeline(char *inputBuf[], int *token, int *argc)
             exit(1);
         }
         //PARENT PROCESS
-
         close(fd[WRITE_END]);
-        wait(&status);
+        waitpid(-1, &status, 0);
     }
     else
     {
         //CHILD PROCESS
         close(fd[WRITE_END]);
-
-        read(fd[READ_END], buffer, BUFF_SIZE);
-
+        if (dup2(fd[READ_END], STDIN_FILENO) == -1)
+        {
+            perror("failed open");
+            exit(1);
+        }
         close(fd[READ_END]);
-        printf("fff%s", buffer);
+        printf("%s  |   %s   \n", behindParam[0], behindParam[1]);
 
-        behindParam[order2_size] = buffer;
-        behindParam[order2_size + 1] = NULL;
-
-        /*if (execvp(*behindParam, behindParam) == -1)
+        if (execvp(*behindParam, behindParam) == -1)
         {
             perror("failed CHILD exec");
-            exit(1);
-        }*/
+            exit(0);
+        }
+        return 0;
     }
     return 0;
+}
+
+void normal_exec(char *inputBuf[])
+{
+
+    if (execvp(inputBuf[0], inputBuf) == -1)
+    {
+        perror("failed CHILD exec");
+        exit(0);
+    }
 }
 
 int whatCommand(int *argc, char *inputBuf[])
@@ -302,6 +285,7 @@ int whatCommand(int *argc, char *inputBuf[])
             count++;
         }
     }
+    normal_exec(inputBuf);
     return 0;
 }
 
@@ -320,9 +304,7 @@ int main(void)
         printf("osh>");
         size = std_input(args);
         //print_input(args, &size);
-        //whatCommand(&size, args);
         pid = fork();
-        printf("FORKING\n");
 
         if (pid == 0)
         {
@@ -336,12 +318,17 @@ int main(void)
                 exp = size - 1;
                 whatCommand(&exp, args);
             }
+            return 0;
         }
         else if (pid > 0)
         {
-            if (args[size] != "&")
+            if (strcmp(args[size], "&") != 0)
             {
-                wait(&status);
+                waitpid(-1, &status, 0);
+            }
+            else
+            {
+                waitpid(-1, &status, WNOHANG);
             }
         }
         else
@@ -349,7 +336,6 @@ int main(void)
             perror("FORK ERROR :");
             exit(0);
         }
-        should_run = 0;
         fflush(stdout);
     }
     return 0;
