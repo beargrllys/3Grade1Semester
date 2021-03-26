@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "types.h": "c",
+        "stat.h": "c",
+        "fcntl.h": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "xutility": "c",
+        "initializer_list": "c",
+        "xstring": "c",
+        "type_traits": "c"
+    }
+}

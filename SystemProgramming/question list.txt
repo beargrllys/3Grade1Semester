@@ -1,0 +1,7 @@
+What is Linux Kernel 5 Component?
+What is system libraires?
+What is System Utilities
+Can you draw System Structure?
+What is three parts of Linux process?
+Can you explain process table entry and U-area?
+Can you draw Process State diagram?
