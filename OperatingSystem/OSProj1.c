@@ -43,6 +43,7 @@ int clear_args(char *inputBuf[])
         }
     }
     memset(inputBuf, '\0', (MAX_LINE / 2 + 1) * sizeof(char));
+    return 0;
 }
 
 int print_input(char *inputBuf[], int *size)
@@ -52,6 +53,7 @@ int print_input(char *inputBuf[], int *size)
     {
         printf("%s\n", *(inputBuf + count));
     }
+    return 0;
 }
 
 void fileRedirection(char *inputBuf[], int *token, int *LtoR, int *argc)
@@ -68,9 +70,21 @@ void fileRedirection(char *inputBuf[], int *token, int *LtoR, int *argc)
     }
     if (*LtoR == 1)
     { //Left to Right
-        for (idx = 1; idx < *token; idx++)
+        for (int tmp = 0; tmp < idx + 2; tmp++)
         {
-            *(paramList + idx - 1) = *(inputBuf + idx);
+            paramList[tmp] = (char *)malloc(sizeof(char) * MAX_LINE);
+            if (tmp == idx)
+            {
+                *(paramList + tmp) = ".";
+            }
+            else if (tmp == idx + 1)
+            {
+                *(paramList + tmp) = NULL;
+            }
+            else
+            {
+                strcpy(paramList[tmp], inputBuf[tmp]);
+            }
         }
     }
     else
@@ -78,22 +92,6 @@ void fileRedirection(char *inputBuf[], int *token, int *LtoR, int *argc)
         for (idx = *token + 1; idx < *argc; idx++)
         {
             *(paramList + idx) = *(inputBuf + idx);
-        }
-    }
-    for (int tmp = 0; tmp < idx + 2; tmp++)
-    {
-        paramList[tmp] = (char *)malloc(sizeof(char) * MAX_LINE);
-        if (tmp == idx)
-        {
-            *(paramList + tmp) = ".";
-        }
-        else if (tmp == idx + 1)
-        {
-            *(paramList + tmp) = NULL;
-        }
-        else
-        {
-            strcpy(paramList[tmp], inputBuf[tmp]);
         }
     }
     printf("%s   %s\n", *paramList, *(paramList + 1));
@@ -142,6 +140,7 @@ int whatCommand(int *argc, char *inputBuf[])
             count++;
         }
     }
+    return 0;
 }
 
 int main(void)
@@ -150,6 +149,8 @@ int main(void)
     int should_run = 1;
     int size;
     pid_t pid;
+
+    memset(args, '\0', (MAX_LINE / 2 + 1) * sizeof(char));
 
     while (should_run)
     {
