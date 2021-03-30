@@ -70,7 +70,6 @@ char *mygetcwd(char *buf2, size_t size)
     }
   }
 
-  printf("%s\n", buf2);
   memset(buf, '\0', MAX_DIR);
   for (i = 255; i >= 0; --i)
   {
@@ -96,9 +95,9 @@ char *mygetcwd(char *buf2, size_t size)
       }
     }
   }
-  printf("%s\n", buf);
   closedir(dp);
   closedir(root_dp);
+  strcpy(buf2, buf);
   return buf2;
 }
 
