@@ -17,25 +17,31 @@ typedef struct _Node
 
 void printNodeList()
 {
-    ;
 }
 
 /*****************************************************이 안쪽은 건들이지 마세요.***********************************************************/
 int main()
 {
-    Node **phead;
-    Node *head, *new_node;
-    int list[10] = {7, 3, 5, 4, 9, 0, 1, 8, 2, 6};
+    Node *phead = NULL;
+    Node *head = NULL, *new_node = NULL;
+    int list[11] = {7, 3, 5, 4, 9, 0, 1, 8, 2, 6};
     int i = 0;
-
-    phead = &head;
 
     for (i = 0; i < 10; i++)
     {
         new_node = (Node *)malloc(sizeof(Node));
         new_node->val = list[i];
-        new_node->next_Node = head;
-        head = new_node;
+        new_node->next_Node = NULL;
+        if (i == 0)
+        {
+            phead = new_node;
+            head = new_node;
+        }
+        else
+        {
+            head->next_Node = new_node;
+            head = new_node;
+        }
     }
     /*****************************************************이 안쪽은 건들이지 마세요.***********************************************************/
 
