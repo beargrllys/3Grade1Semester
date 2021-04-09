@@ -173,8 +173,35 @@ root name 서버의 경우 마비되면 진짜 ㅈ되기 때문에 전세계의 
 
 <img src='http://drive.google.com/uc?export=view&id=1HcljIHwE02U_aq4Am87R5ZTzwTLphvsq' />
 
-- DNS서버는 TCP통신을 사용하는 HTTP와 다르게 UDP 통신을 사용한다.
-- 
+- DNS서버는 TCP통신을 사용하는 HTTP와 다르게 UDP 통신을 사용한다. 왜냐하면 HTTP Request를 준비 하기위한 준비 동작을 최대한 빠르게 마무리 하기 위해 DNS서버 통신은 UDP로 동작하게 된다. 어느정도 유실의 위험성이 있더라도 스렇게 사용중이다.
 
 
 
+### video Streaming / Content distribution network
+
+비디오 초당 24개 이상의 이미지를 바꿔가면 보여주는 콘텐츠, 압축을위해 픽셀의 변화값을 저장하는 등 압축을 시행한다.
+
+MPEG1 : 오디오 압축
+
+MPEG2: 영상압축
+
+MPEG4: 인터넷에서 주로 쓰임 12Mbps
+
+#### Steaming stored video
+
+**client-side buffering and playout delay**: 서버가 지속적으로 bit를 전송해주면 client가 그 bit를 받자마자 재생하면 문제가 생김으로 client쪽에 어느정도 데이터가 쌓을때까지 저장해두다가 임계치를 넘어가면서 재생을 시작하는 방식
+
+- 네트워크 상황이 좋지 않을경우 Client-side buffering and playout delay 만으로는 커버가 불가능하여 DASH라는 기법을 사용하기도 한다.
+- DASH기법: 전체 영상을 여러개의 Chunk로 나누고  Chunk단위로 네트워크 상황에 맞게 Chunk의 화질을 조절하여 프레임이 끊어지지 않도록 하는 기법
+
+<img src='http://drive.google.com/uc?export=view&id=1UMY94_UCaFM-4jS5jYMLJ3y1F_YT-ndF' style="zoom:50%;" />
+
+### Content distribution network(CDNs)
+
+어떻게 수십만 대의 기기에 콘텐츠를 동시에 송출할수 있는가?
+
+전세계에 깔려진 CDN서버에 동일한 콘텐츠를 저장해두고 Client가 콘텐츠를 요청하면 중앙에 manifest file server가 콘텐츠를 담고 있는 CDN서버를 연결해주고 CDN서버는 콘텐츠 Chunk들을 Client에 전송해줌
+
+![Multi Content Delivery Networks (CDN) | Improve User Experience & Content  Delivery](https://www.leaseweb.com/sites/default/files/Images/09_Products/cdn/multicdn.png)
+
+그래서 만약 어떤 사용자가 근처에 CDN서버에서 Chunk를 가져오고자 한다면 우선 client의 local DNS Server에 검색 후 DNS의 일련의 과정을 거쳐 www.netflix.com이라는 사이트에 접속하고 거기서 가지고 온 IP를 가장 근처의 CDN서버의 물리적위치를 IP에서 파악, CDN서버와 매칭해준다. 그러면 Client는 근처 CDN서버의 IP를 알게되고 CDN서버는 Client에 Chunk를 전송하게 된다.
