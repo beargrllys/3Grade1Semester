@@ -18,6 +18,7 @@ void siglongjmp(sigjmp_buf env, int val);
 //저장된 위치로 다시 되돌립니다.
 
 //savemask가 0이 아니라면 env에 현재 스택과 시그널 마스크를 저장합니다.
+//0이면 그냥 env에 현재 스택과 시그널 마스크를 저장합니다.
 //그리고 siglongjmp()를 호출하여 저장했던 위치로 다시 로드합니다.
 
 //저장 후 즉시 sigjmp_buf를 로드했다면 0을 반환하며, siglongjmp()를 통해 반환하면 0이 아닌 숫자가 반환됩니다.

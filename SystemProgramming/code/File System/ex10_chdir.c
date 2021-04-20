@@ -9,6 +9,7 @@ int chdir(const char *path) int fchdir(int fd);
 char *getcwd(char *buf, size_t size);
 //현재 있는 디렉토리를 문자열로서 buf버퍼에 저장해주고 size에 그 길이를 저장합니다.
 // 만약에 디렉토리 문자열 길이가 buf보다 길면 NULL을 반환합니다.
+//buf를 null로 설정하면 malloc을 하여 그 문자열의 포인터를 반환합니다.
 //성공하면 buf의 포인터 실패하면 NULL을 반환합니다.
 
 int main(void)

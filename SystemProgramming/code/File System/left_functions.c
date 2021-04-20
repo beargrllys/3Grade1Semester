@@ -31,6 +31,7 @@ int unlink(const char *pathname);
 //마지막으로 남아 있는 링크가 삭제 시도 될때 해당 파일이 열려있지 않으면 해당 파일이 삭제 됩니다.
 // 만일 위 상황에서 파일이 열람된 상태 였다면 해당파일이 close될 떄까지 존재하다가 삭제 됩니다.
 //만일 해당이름이 hard link가 아닌 symbolic link라면 해당 링크만 삭제 됩니다.
+//hard link에 unlink를 하면 hardlink count가 0이 아니면 hardlink file만을 0이면 물려있는 파일데이터도 삭제합니다.
 //성공하면 - 실패하면 -1을 반환합니다.
 
 int rename(const char *oldpathm const char *newpath);

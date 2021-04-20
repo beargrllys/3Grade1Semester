@@ -179,3 +179,66 @@ Connectionless인 이유: UDP를 이용해 불특정 다수의 신호를 받으�
 >
 > 결국 Socket과 Socket간에 자원 배정이 되는 셈이다.
 
+
+
+## flow control
+
+- recive buffer에 여유 공간이 얼마나 있는지 sender 쪽에 수시로 알려주면 sender가 receiver가 얼마나 여유가 있는지 알수 있지 않을까??
+  - 그래서 수시로 TCP Header에는 reciver에 여유 공간이 얼마나 있는지 알려줄수 있는 항목이 있다.
+  - 상대  recive Buffer가 over flow되지 않도록 동적으로 조절해준다.
+  - 상대  recive Buffer가 크다 => 원활히 처리되고 있다 =>sender의 window size를 조절해준다.
+- 문제는 만약 B의 recieve buffer가 0이라서 교착된 상황이다. 그리고 B는 A에게 보내줄게 없다. 그러면 이상황에서  B의 recieve buffer에 여유공간이 생기더라도 B의 send buffer를 통해 A에게 여유공간이 생겼다는 사실을 알려줄 방법이 없다. => Deadlock
+  - 그래서 A가 B의 recieve buffer가 0이라고 알고 있다면 1byte짜리 probe packet을 주기적으로 보내서 B가 Ack신호를 다시 보내게 만들어서 A가 B의 Rcevie buffer size를 지속적으로 확인한다.
+- **그러면 Segment의 크기는 어떻게 결정할까?**
+  - 만약 segment에 딸려오는 Data의 크기가 너무 작으면 앞에 붙는 header때문에 배보다 배꼽이 더 큰상황이 생긴다. 그래서 가능하면 딸려오는 Data의 크기 Segment의 크기를 잘 결정해야한다.
+  - **Silly window syndrome**
+    - **Nagle's algorithm**
+    - 1. 가장 첫 데이터는 1바이트만 있더라도 TCP로 보낸다.
+      2. 보낸 데이터가 다시 ACK가 오거나(네트워크 상황이 좋다 == 비효율적이어도 네트워크가 감당가능) / Maximum-segment size(MSS)의 크기만큼 데이터가 쌓일 떄까지 기다렸가 데이터를 보낸다.(네트워크 상황이 좋지 않다 == 한번에 가능한 많이 데이터를 보낸다.)
+    - Reciever  입장에서도 Segament size를 결정한는데 개입한다.
+      - **Clark's solution**
+        - 작게 작게 여러번 받을바에는 1개의 MSS만큼의 segment가 들어갈 크기가 확보 되거나 / Buffer의 절반이 비어보리기 전까지는 recive Buffer의 크기를 0이라고 보내버린다.
+        - Sender가 어느정도 크기가 모으고 나서 segment를 보내도록 유도하는 것이다. 
+      - **Delayed ACK**
+        - Sender를 받고  500ms 정도를 일부러 기다렸다가 ACK를 보낸다.
+- **TCP Connection management**
+  - TCP Connection 이 연결되는 과정 = **TCP 3-way handshake**
+    - Sender가 Reciver에게  SYNbit = 1와 최조의 seqence number=X를 보낸다.
+    - Reciver도  Sender에게 SYNbit = 1과 Reciver->Sender 전용 Send Buffer의 최조의 seqence number=Y를 보낸다. 더불어 최초 신호에 대한 답장으로ACKbit=1과 ACKnum=X+1을 전송한다.
+    - 그럼 반대로 Sender도 Reciver에게 ACKbit=1과 ACKnum=Y+1을 전송한다.
+    - 최종적으로 TCP연결이 성립한다.
+  - TCP Connection 이 해제되는 과정 = **TCP 4-way handshake**
+    - Sender가 TCP연결을 해제하길 원한다.
+    - Sender가 Reciver에게  FINbit = 1와 최조의 seqence number=X를 보낸다.
+    - Reciver도  Sender에게 해제의사를 수락하는 의미로 ACKbit=1과 ACKnum=X+1을 전송한다.
+    - Reciver도 자신의 소켓을 닫아야하기에 Sender 쪽에 FINbit = 1와 최조의 seqence number=Y를 보낸다.
+    - Sender도  Reciver에게 해제의사를 수락하는 의미로 ACKbit=1과 ACKnum=Y+1을 전송한다.
+    - Reciver는 Sender의 ACK를 받고 소켓을 폐쇄한다.
+    - Sender는 Reciver의 특이사항(ACK패킷의 소실)이 없는지 segment 생존기한의 2배만큼 기다렸다가 반응이 없으면 소켓을 폐쇄한다.
+
+
+
+## Congestion Control
+
+- TCP상황에서는 네트워크 상황에 유동적으로 대처해야한다. 
+- 이러한 혼잡제어를 통해 다뤄야할 현상은 Long Delay와 Packet loss이다.
+- 각 호스트가 네트워크 상황을 판단할 수있는 척도는 time out이든 3 duplicate ack든 Data를 retransmission하는 것으로 네트워크 상황이 여의치 않음을 결정할수있다.
+- 그래서 모든 호스트는 개인적으로는 최대한 많은 Data을 자주자주 전송하면 좋지만 그렇게 한다면 모두가 피해를 존다. 그래서 모두를 위해 각자 stream speed를 조절해햐한다.
+- host가 네트워크 상황을 간접적으로 판단하는 방법은 data를 전송하고 ACK를 받아내는 delay를 통해 유추가능하다
+- 그리고 판단된 상황을 이용해 Sender의 window size를 결정한다. 앞에 flow control에서는 sender window를 rwnd로 설정했지만 상황이 여의치 않아 Congestion window size가  rwnd보다 작아지게 되면 Congestion window size를 실제 sender window size를 설정한다
+- Window size = MIN(rwnd, congestion window Size) // 일반적으로 rwnd는 거의 여유가 있기에 거의 congestion window Size가 반영된다.
+- AIMD(Additive Increase Multiplicate Decrease): 호스트들이 눈치보는 과정
+  - sender를 보낼 때마다 congestion window Size를 1씩 증가 시킨다, 그러다가  어느순간 Data를 retransmission 해야할, 네트워크 과부화가 의심되는 현상이 생기면 congestion window Size를 절반으로 줄여버린다. 
+  - 그리고 다시 sender를 보낼 때마다 congestion window Size를 1씩 증가 시킨다. 이 과정을 반복한다.
+- 그럼 처음에는 데이터를 얼마나 보낼것인가 = TCP Slow start
+  - 처음에는 1MSS를 보낸다.
+  - 그뒤로 2배씩 증가시켜 보낸다 
+  - 그러다가 TCP의 고유 변수인 Slow Start threshold(ssthresh)만큼에 다달으면 선형적으로 1씩 증가시키며 패킷을 전송한다.
+  - 그러다가 과부화가 생기면 ssthresh를 절반으로 줄인다. 이후..
+    - TCP Tahoe 초기버전에서는 cwnd를 1부터 시작해서 새롭게 바뀐 ssthresh를 기준으로 같은 일을 반복한다.
+    - TCP Reno에서는 Time out으로 인한 retransmit의 경우 1부터 시작해서 새롭게 바뀐 ssthresh를 기준으로 같은 일을 반복한다.
+    -  한편 TCP Reno에서  3 duplicate ack으로 인한 retransmit의 경우 새롭게 바뀐 ssthresh 에서 부터 다시 시작하여 선형 증가 해서 패킷을 전송한다. 
+- Time out으로 문제가 생기면 진짜 네트워크 상황이 개판이지만, 3 duplicate ack는 단일 패킷이  운이 않좋은 것이라고 생각할수 있다.
+- 이외 TCP CUBIC: 둥글게 좋은 크기를 오랬동안 유지하기 위한 방안
+- TCP fairness: Bottleneck 상황에서 없는 대역폭을 절반으로 나눠사용하는 방안
+
